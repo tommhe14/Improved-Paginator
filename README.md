@@ -2,6 +2,8 @@
 
 #### discord.py-pagination is a Python library to easily create embed paginators.
 
+### Now updated [tommhe14] to store multiple messages and fork the corresponding one for display.
+
 <img src="https://cdn.soosbot.com/images/pagination-requirement.svg" alt="WARNING IMAGE NOT FOUND">
 
 ## Installation
