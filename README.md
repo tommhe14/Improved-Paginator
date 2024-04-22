@@ -4,15 +4,7 @@
 
 ### Now updated [tommhe14] to store multiple messages and fork the corresponding one for display.
 
-<img src="https://cdn.soosbot.com/images/pagination-requirement.svg" alt="WARNING IMAGE NOT FOUND">
-
-## Installation
-
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the library.
-
-```bash
-pip install discord.py-pagination
-```
+<img src="[https://cdn.soosbot.com/images/pagination-requirement.svg](https://cdn.discordapp.com/attachments/1222190576426815538/1232105864731824198/screamrobbo.jpg?ex=66283f81&is=6626ee01&hm=844dae95c7d83b0cc4c1376c229ee007aceafbd86c504f8348e14e6f62e175fd&)" alt="WARNING IMAGE NOT FOUND">
 
 ## Usage
 
