@@ -72,37 +72,55 @@ class Simple(discord.ui.View):
 
         message = await ctx.send(embed=self.pages[self.InitialPage], view=self, ephemeral=self.ephemeral)
 
-        button_data.update({message.id:{"self":self,"message":message,"page_counter":self.page_counter}})
+        self.InitialPage = self.InitialPage if self.InitialPage is not None else 0
+
+        button_data.update(
+                {
+                message.id:
+                    {
+                        "self":self,
+                        "message":message,
+                        "page_counter":self.page_counter,
+                        "current_page":self.InitialPage,
+                        "total_page_count":self.total_page_count
+                    }
+                }
+                        )
 
 
 
     async def previous(self, interaction):
         source_self = button_data[interaction.message.id]["self"]
 
-        self.current_page = source_self.current_page
-        self.total_page_count = source_self.total_page_count
-        self.page_counter.label = source_self.page_counter.label
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        self.total_page_count = button_data[interaction.message.id]["total_page_count"]
         self.message = button_data[interaction.message.id]["message"]
         self.pages = button_data[interaction.message.id]["page_counter"].pages
-
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        
         if self.current_page == 0:
             self.current_page = self.total_page_count - 1
         else:
             self.current_page -= 1
 
         self.page_counter.label = f"{self.current_page + 1}/{self.total_page_count}"
-        await self.message.edit(embed=self.pages[self.current_page], view=self)
 
-        button_data[interaction.message.id]["self"] = self
+        button_data[interaction.message.id]["self"].page_counter.current_page = self.current_page
+        button_data[interaction.message.id]["self"].page_counter.total_pages = self.total_page_count
+        button_data[interaction.message.id]["page_counter"] = self.page_counter
+        button_data[interaction.message.id]["current_page"] = self.current_page
+
+        await self.message.edit(embed=self.pages[self.current_page], view=button_data[interaction.message.id]["self"])
+
 
     async def next(self, interaction):
         source_self = button_data[interaction.message.id]["self"]
 
-        self.current_page = source_self.current_page
-        self.total_page_count = source_self.total_page_count
-        self.page_counter.label = source_self.page_counter.label
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        self.total_page_count = button_data[interaction.message.id]["total_page_count"]
         self.message = button_data[interaction.message.id]["message"]
         self.pages = button_data[interaction.message.id]["page_counter"].pages
+        self.page_counter = button_data[interaction.message.id]["page_counter"]
 
         if self.current_page == self.total_page_count - 1:
             self.current_page = 0
@@ -110,11 +128,14 @@ class Simple(discord.ui.View):
             self.current_page += 1
 
         self.page_counter.label = f"{self.current_page + 1}/{self.total_page_count}"
-        await self.message.edit(embed=self.pages[self.current_page], view=self)
 
-        button_data[interaction.message.id]["self"] = self
+        button_data[interaction.message.id]["self"].page_counter.current_page = self.current_page
+        button_data[interaction.message.id]["self"].page_counter.total_pages = self.total_page_count
+        button_data[interaction.message.id]["page_counter"] = self.page_counter
+        button_data[interaction.message.id]["current_page"] = self.current_page
 
-
+        await self.message.edit(embed=self.pages[self.current_page], view=button_data[interaction.message.id]["self"])
+        
 
     async def next_button_callback(self, interaction: discord.Interaction):
         self.ctx.author = button_data[interaction.message.id]["self"].ctx.author
@@ -136,8 +157,11 @@ class Simple(discord.ui.View):
 
 
 
-
 class SimplePaginatorPageCounter(discord.ui.Button):
     def __init__(self, style: discord.ButtonStyle, TotalPages, InitialPage, pages):
+        self.current_page = InitialPage
+        self.total_pages = TotalPages
         super().__init__(label=f"{InitialPage + 1}/{TotalPages}", style=style, disabled=True)
         self.pages = pages
+    
+        
