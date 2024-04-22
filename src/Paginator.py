@@ -117,7 +117,6 @@ class Simple(discord.ui.View):
 
 
     async def next_button_callback(self, interaction: discord.Interaction):
-        print(interaction.message.id)
         self.ctx.author = button_data[interaction.message.id]["self"].ctx.author
         if interaction.user != self.ctx.author and self.AllowExtInput:
             embed = discord.Embed(description="You cannot control this pagination because you did not execute it.",
