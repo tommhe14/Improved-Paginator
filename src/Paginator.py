@@ -3,6 +3,7 @@ from __future__ import annotations
 import discord
 from discord.ext import commands
 
+button_data = {}
 
 class Simple(discord.ui.View):
     """
@@ -48,7 +49,7 @@ class Simple(discord.ui.View):
         super().__init__(timeout=timeout)
 
     async def start(self, ctx: discord.Interaction|commands.Context, pages: list[discord.Embed]):
-        
+
         if isinstance(ctx, discord.Interaction):
             ctx = await commands.Context.from_interaction(ctx)
 
@@ -61,51 +62,106 @@ class Simple(discord.ui.View):
         self.NextButton.callback = self.next_button_callback
 
         self.page_counter = SimplePaginatorPageCounter(style=self.PageCounterStyle,
-                                                       TotalPages=self.total_page_count,
-                                                       InitialPage=self.InitialPage)
+                                                    TotalPages=self.total_page_count,
+                                                    InitialPage=self.InitialPage,
+                                                    pages=self.pages)
 
         self.add_item(self.PreviousButton)
         self.add_item(self.page_counter)
         self.add_item(self.NextButton)
 
-        self.message = await ctx.send(embed=self.pages[self.InitialPage], view=self, ephemeral=self.ephemeral)
+        message = await ctx.send(embed=self.pages[self.InitialPage], view=self, ephemeral=self.ephemeral)
 
-    async def previous(self):
+        self.InitialPage = self.InitialPage if self.InitialPage is not None else 0
+
+        button_data.update(
+                {
+                message.id:
+                    {
+                        "self":self,
+                        "message":message,
+                        "page_counter":self.page_counter,
+                        "current_page":self.InitialPage,
+                        "total_page_count":self.total_page_count
+                    }
+                }
+                        )
+
+
+
+    async def previous(self, interaction):
+        source_self = button_data[interaction.message.id]["self"]
+
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        self.total_page_count = button_data[interaction.message.id]["total_page_count"]
+        self.message = button_data[interaction.message.id]["message"]
+        self.pages = button_data[interaction.message.id]["page_counter"].pages
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        
         if self.current_page == 0:
             self.current_page = self.total_page_count - 1
         else:
             self.current_page -= 1
 
         self.page_counter.label = f"{self.current_page + 1}/{self.total_page_count}"
-        await self.message.edit(embed=self.pages[self.current_page], view=self)
 
-    async def next(self):
+        button_data[interaction.message.id]["self"].page_counter.current_page = self.current_page
+        button_data[interaction.message.id]["self"].page_counter.total_pages = self.total_page_count
+        button_data[interaction.message.id]["page_counter"] = self.page_counter
+        button_data[interaction.message.id]["current_page"] = self.current_page
+
+        await self.message.edit(embed=self.pages[self.current_page], view=button_data[interaction.message.id]["self"])
+
+
+    async def next(self, interaction):
+        source_self = button_data[interaction.message.id]["self"]
+
+        self.current_page = button_data[interaction.message.id]["current_page"]
+        self.total_page_count = button_data[interaction.message.id]["total_page_count"]
+        self.message = button_data[interaction.message.id]["message"]
+        self.pages = button_data[interaction.message.id]["page_counter"].pages
+        self.page_counter = button_data[interaction.message.id]["page_counter"]
+
         if self.current_page == self.total_page_count - 1:
             self.current_page = 0
         else:
             self.current_page += 1
 
         self.page_counter.label = f"{self.current_page + 1}/{self.total_page_count}"
-        await self.message.edit(embed=self.pages[self.current_page], view=self)
+
+        button_data[interaction.message.id]["self"].page_counter.current_page = self.current_page
+        button_data[interaction.message.id]["self"].page_counter.total_pages = self.total_page_count
+        button_data[interaction.message.id]["page_counter"] = self.page_counter
+        button_data[interaction.message.id]["current_page"] = self.current_page
+
+        await self.message.edit(embed=self.pages[self.current_page], view=button_data[interaction.message.id]["self"])
+        
 
     async def next_button_callback(self, interaction: discord.Interaction):
+        self.ctx.author = button_data[interaction.message.id]["self"].ctx.author
         if interaction.user != self.ctx.author and self.AllowExtInput:
             embed = discord.Embed(description="You cannot control this pagination because you did not execute it.",
                                   color=discord.Colour.red())
             return await interaction.response.send_message(embed=embed, ephemeral=True)
-        await self.next()
+        await self.next(interaction)
         await interaction.response.defer()
 
     async def previous_button_callback(self, interaction: discord.Interaction):
+        self.ctx.author = button_data[interaction.message.id]["self"].ctx.author
         if interaction.user != self.ctx.author and self.AllowExtInput:
             embed = discord.Embed(description="You cannot control this pagination because you did not execute it.",
                                   color=discord.Colour.red())
             return await interaction.response.send_message(embed=embed, ephemeral=True)
-        await self.previous()
+        await self.previous(interaction)
         await interaction.response.defer()
 
 
 
 class SimplePaginatorPageCounter(discord.ui.Button):
-    def __init__(self, style: discord.ButtonStyle, TotalPages, InitialPage):
+    def __init__(self, style: discord.ButtonStyle, TotalPages, InitialPage, pages):
+        self.current_page = InitialPage
+        self.total_pages = TotalPages
         super().__init__(label=f"{InitialPage + 1}/{TotalPages}", style=style, disabled=True)
+        self.pages = pages
+    
+        
