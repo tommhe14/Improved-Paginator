@@ -3,7 +3,10 @@ from __future__ import annotations
 import discord
 from discord.ext import commands
 
-button_data = {}
+from typing import Dict
+
+button_data: Dict[int, dict] = {}
+
 
 class Simple(discord.ui.View):
     """
