@@ -90,13 +90,13 @@ class Simple(discord.ui.View):
 
 
     async def previous(self, interaction):
-        source_self = button_data[interaction.message.id]["self"]
 
         self.current_page = button_data[interaction.message.id]["current_page"]
         self.total_page_count = button_data[interaction.message.id]["total_page_count"]
         self.message = button_data[interaction.message.id]["message"]
         self.pages = button_data[interaction.message.id]["page_counter"].pages
         self.current_page = button_data[interaction.message.id]["current_page"]
+        self.page_counter = button_data[interaction.message.id]["page_counter"]
         
         if self.current_page == 0:
             self.current_page = self.total_page_count - 1
@@ -114,7 +114,6 @@ class Simple(discord.ui.View):
 
 
     async def next(self, interaction):
-        source_self = button_data[interaction.message.id]["self"]
 
         self.current_page = button_data[interaction.message.id]["current_page"]
         self.total_page_count = button_data[interaction.message.id]["total_page_count"]
